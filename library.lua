@@ -7,6 +7,9 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
+-- Mobile Detection
+local IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+
 -- Theme
 local Theme = {
 	Background = Color3.fromRGB(20, 20, 25),
