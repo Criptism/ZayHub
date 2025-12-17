@@ -55,8 +55,8 @@ function Library:Init(config)
 	-- Main Frame
 	local Main = Create("Frame", {
 		Name = "Main",
-		Size = IsMobile and UDim2.new(0, 300, 0, 400) or UDim2.new(0, 580, 0, 380),
-		Position = UDim2.new(0.5, IsMobile and -150 or -290, 0.5, IsMobile and -200 or -190),
+		Size = IsMobile and UDim2.new(0, 340, 0, 360) or UDim2.new(0, 580, 0, 380),
+		Position = UDim2.new(0.5, IsMobile and -170 or -290, 0.5, IsMobile and -180 or -190),
 		BackgroundColor3 = Theme.Background,
 		BorderSizePixel = 0,
 		Parent = ScreenGui
