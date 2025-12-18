@@ -1,4 +1,4 @@
---Size
+--Size Again
 
 local player = game:GetService("Players").LocalPlayer
 local Players = game:GetService("Players")
@@ -514,6 +514,7 @@ end)
 RunService.Heartbeat:Connect(function()
 	pcall(function()
 		SizeLabel:Set("Size: " .. str.Value)
+        StatSizeLabel:Set("Size: " .. str.Value)
 	end)
 end)
 
