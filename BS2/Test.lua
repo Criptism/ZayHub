@@ -174,12 +174,7 @@ FarmingTab:AddButton("Ultimate FPS & Clean (All-in-One)", function()
 	
     -- Hide Inventory
 	loadstring(game:HttpGet("https://pastebin.com/raw/8W1draqT", true))()
-	
-	-- Delete HUD
-	pcall(function()
-		game:GetService("Players").LocalPlayer.PlayerGui.HUD:Destroy()
-	end)
-	
+
 	-- Delete Rumble
 	pcall(function()
 		game.ReplicatedFirst.TourneyQ:Destroy()
@@ -225,27 +220,47 @@ FarmingTab:AddButton("Ultimate FPS & Clean (All-in-One)", function()
     local hud = player.PlayerGui:FindFirstChild("HUD")
     if hud then hud:Destroy() end
 
-    -- Clean workspace except character and whitelist
-    local whitelistNames = { ["Baseplate"] = true, ["DontDeleteMe"] = true }
-    local keepObjects = {}
-    for _, desc in ipairs(character:GetDescendants()) do keepObjects[desc] = true end
-    keepObjects[character] = true
+ocal Players = game:GetService("Players")
+local workspace = game:GetService("Workspace")
 
-    local function isNameWhitelisted(obj)
-        while obj do 
-            if whitelistNames[obj.Name] then return true end 
-            obj = obj.Parent 
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+local whitelistNames = {
+    ["Baseplate"] = true,
+    ["DontDeleteMe"] = true,
+}
+
+-- Mark all descendants of the character as true in this table
+local keepObjects = {}
+
+for , desc in ipairs(character:GetDescendants()) do
+    keepObjects[desc] = true
+end
+keepObjects[character] = true -- also keep the character itself
+
+-- Helper to check if an object or its parent is whitelisted by name
+local function isNameWhitelisted(obj)
+    while obj do
+        if whitelistNames[obj.Name] then
+            return true
         end
-        return false
+        obj = obj.Parent
     end
+    return false
+end
 
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if not keepObjects[obj] and obj ~= workspace.CurrentCamera and not obj:IsDescendantOf(workspace.CurrentCamera) then
-            if not isNameWhitelisted(obj) and obj.Parent then
-                pcall(function() obj:Destroy() end)
+for , obj in ipairs(workspace:GetDescendants()) do
+    if not keepObjects[obj] then
+        if obj ~= workspace.CurrentCamera and not obj:IsDescendantOf(workspace.CurrentCamera) and not isNameWhitelisted(obj) then
+            if obj and obj.Parent then
+                pcall(function()
+                    obj:Destroy()
+                end)
             end
         end
     end
+end
 
     -- Destroy TourneyQ in ReplicatedFirst
     local ReplicatedFirst = game:GetService("ReplicatedFirst")
