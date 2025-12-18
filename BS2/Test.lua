@@ -1,3 +1,5 @@
+--updated Ultimate FPS
+
 local player = game:GetService("Players").LocalPlayer
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -162,113 +164,96 @@ end)
 FarmingTab:AddLabel("--- Extra Options ---")
 
 FarmingTab:AddButton("Ultimate FPS & Clean (All-in-One)", function()
-	-- Anti AFK
-	local vu = game:GetService("VirtualUser")
-	game:GetService("Players").LocalPlayer.Idled:connect(function()
-		vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-		wait(1)
-		vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-	end)
-    
-    game:GetService("Lighting").ClockTime = 23.5	
-	
-    -- Hide Inventory
-	loadstring(game:HttpGet("https://pastebin.com/raw/8W1draqT", true))()
-
-	-- Delete Rumble
-	pcall(function()
-		game.ReplicatedFirst.TourneyQ:Destroy()
-	end)
-	
-	-- Delete Clouds
-	pcall(function()
-		game:GetService("Workspace").Clouds:Destroy()
-		for i, v in pairs(player.PlayerScripts:GetChildren()) do
-			if v.Name == "LocalScript" then
-				v:Destroy()
-			end
-		end
-	end)
-	
-	local workspace = game:GetService("Workspace")
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    local workspace = game:GetService("Workspace")
     local Lighting = game:GetService("Lighting")
-    -- Teleport 15,000 studs up
+    local ReplicatedFirst = game:GetService("ReplicatedFirst")
+    local vu = game:GetService("VirtualUser")
+
+    -- Anti-AFK
+    player.Idled:Connect(function()
+        vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+        wait(1)
+        vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+    end)
+
+    -- Set nighttime
+    Lighting.ClockTime = 23.5
+
+    -- Hide inventory
+    loadstring(game:HttpGet("https://pastebin.com/raw/8W1draqT", true))()
+
+    -- Delete TourneyQ safely
+    pcall(function()
+        if ReplicatedFirst:FindFirstChild("TourneyQ") then
+            ReplicatedFirst.TourneyQ:Destroy()
+        end
+    end)
+
+    -- Delete Clouds & unnecessary LocalScripts
+    pcall(function()
+        if workspace:FindFirstChild("Clouds") then
+            workspace.Clouds:Destroy()
+        end
+        for _, v in pairs(player.PlayerScripts:GetChildren()) do
+            if v:IsA("LocalScript") then
+                v:Destroy()
+            end
+        end
+    end)
+
+    -- Teleport 15,000 studs up and create platform
     local skyHeight = 15000
     local skyPos = hrp.Position + Vector3.new(0, skyHeight, 0)
 
-    -- Create invisible platform
     local platform = Instance.new("Part")
     platform.Name = "DontDeleteMe"
     platform.Size = Vector3.new(50, 2, 50)
-    platform.Position = skyPos - Vector3.new(0, 3, 0) -- just below player
+    platform.Position = skyPos - Vector3.new(0, 3, 0)
     platform.Anchored = true
     platform.Transparency = 1
     platform.CanCollide = true
     platform.Parent = workspace
 
-    -- Move player above platform
     hrp.CFrame = CFrame.new(skyPos)
 
     -- Camera & visual optimizations
     player.CameraMaxZoomDistance = 1500
     Lighting.FogEnd = 100000
-    Lighting.Atmosphere.Density = 0
-    local atm = Lighting:FindFirstChildOfClass("Atmosphere")
-    if atm then atm:Destroy() end
+    if Lighting:FindFirstChildOfClass("Atmosphere") then
+        Lighting:FindFirstChildOfClass("Atmosphere"):Destroy()
+    end
 
     -- Destroy HUD
-    local hud = player.PlayerGui:FindFirstChild("HUD")
-    if hud then hud:Destroy() end
-
-local Players = game:GetService("Players")
-local workspace = game:GetService("Workspace")
-
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-
-local whitelistNames = {
-    ["Baseplate"] = true,
-    ["DontDeleteMe"] = true,
-}
-
--- Mark all descendants of the character as true in this table
-local keepObjects = {}
-
-for , desc in ipairs(character:GetDescendants()) do
-    keepObjects[desc] = true
-end
-keepObjects[character] = true -- also keep the character itself
-
--- Helper to check if an object or its parent is whitelisted by name
-local function isNameWhitelisted(obj)
-    while obj do
-        if whitelistNames[obj.Name] then
-            return true
-        end
-        obj = obj.Parent
+    if player.PlayerGui:FindFirstChild("HUD") then
+        player.PlayerGui.HUD:Destroy()
     end
-    return false
-end
 
-for , obj in ipairs(workspace:GetDescendants()) do
-    if not keepObjects[obj] then
-        if obj ~= workspace.CurrentCamera and not obj:IsDescendantOf(workspace.CurrentCamera) and not isNameWhitelisted(obj) then
-            if obj and obj.Parent then
-                pcall(function()
-                    obj:Destroy()
-                end)
-            end
+    -- Workspace cleanup (keep character & whitelisted objects)
+    local whitelistNames = { ["Baseplate"] = true, ["DontDeleteMe"] = true }
+    local keepObjects = {}
+    for _, desc in ipairs(character:GetDescendants()) do keepObjects[desc] = true end
+    keepObjects[character] = true
+
+    local function isWhitelisted(obj)
+        while obj do
+            if whitelistNames[obj.Name] then return true end
+            obj = obj.Parent
+        end
+        return false
+    end
+
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if not keepObjects[obj] and obj ~= workspace.CurrentCamera and not obj:IsDescendantOf(workspace.CurrentCamera) and not isWhitelisted(obj) then
+            pcall(function() obj:Destroy() end)
         end
     end
-end
 
-    -- Destroy TourneyQ in ReplicatedFirst
-    local ReplicatedFirst = game:GetService("ReplicatedFirst")
-    if ReplicatedFirst:FindFirstChild("TourneyQ") then 
-        ReplicatedFirst.TourneyQ:Destroy() 
-    end
-	Notify("Ultimate Clean", "Anti-AFK, Hide Inv, Max FPS, Deleted objects, Sky TP!", 5)
+    Notify("Ultimate Clean", "Anti-AFK, Hide Inventory, Max FPS, Deleted Objects, Sky TP!", 5)
 end)
+
 
 -- Duping Tab
 local DupingTab = Window:CreateTab("Duping")
