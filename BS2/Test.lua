@@ -195,101 +195,64 @@ FarmingTab:AddButton("Ultimate FPS & Clean (All-in-One)", function()
 		end
 	end)
 	
-	-- Delete All Workspace & Create Sky Platform
-	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-	local currentPos = humanoidRootPart.CFrame
-	local skyPos = currentPos + Vector3.new(0, 15000, 0)
-	
-	-- Create invisible platform
-	local platform = Instance.new("Part")
-	platform.Name = "DONTDELETEME"
-	platform.Size = Vector3.new(50, 2, 50)
-	platform.Position = skyPos.Position
-	platform.Anchored = true
-	platform.Transparency = 1
-	platform.CanCollide = true
-	platform.Parent = game.Workspace
-	
-	local keepObjects = {
-		["Terrain"] = true,
-		["Camera"] = true,
-		["DONTDELETEME"] = true,
-		[character.Name] = true
-	}
-	
-	-- Keep all player characters
-	for _, plr in pairs(game.Players:GetPlayers()) do
-		if plr.Character then
-			keepObjects[plr.Character.Name] = true
-		end
-	end
-	
-	-- Delete everything except essentials
-	local deletedCount = 0
-	for _, obj in pairs(game.Workspace:GetChildren()) do
-		if not keepObjects[obj.Name] and obj ~= character and obj ~= platform then
-			pcall(function()
-				obj:Destroy()
-				deletedCount = deletedCount + 1
-			end)
-		end
-	end
-	
-	-- Max FPS Optimizations
-	local g = game
-	local w = g.Workspace
-	local l = g.Lighting
-	local t = w.Terrain
-	
-	-- Terrain optimizations
-	t.WaterWaveSize = 0
-	t.WaterWaveSpeed = 0
-	t.WaterReflectance = 0
-	t.WaterTransparency = 0
-	t.Decoration = false
-	
-	-- Lighting optimizations
-	l.GlobalShadows = false
-	l.FogEnd = 9e9
-	l.Brightness = 0
-	l.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
-	
-	-- Rendering quality
-	settings().Rendering.QualityLevel = "Level01"
-	
-	-- Optimize all parts and effects
-	for i, v in pairs(g:GetDescendants()) do
-		if v:IsA("Part") or v:IsA("UnionOperation") or v:IsA("MeshPart") or v:IsA("CornerWedgePart") or v:IsA("TrussPart") then
-			v.Material = "Plastic"
-			v.Reflectance = 0
-			v.CastShadow = false
-		elseif v:IsA("Decal") or v:IsA("Texture") then
-			v.Transparency = 1
-		elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then
-			v.Enabled = false
-		elseif v:IsA("Explosion") then
-			v.BlastPressure = 1
-			v.BlastRadius = 1
-		elseif v:IsA("PointLight") or v:IsA("SpotLight") or v:IsA("SurfaceLight") then
-			v.Enabled = false
-		elseif v:IsA("Sound") or v:IsA("SoundGroup") then
-			v.Volume = 0
-		end
-	end
-	
-	-- Remove lighting effects
-	for i, e in pairs(l:GetChildren()) do
-		if e:IsA("BlurEffect") or e:IsA("SunRaysEffect") or e:IsA("ColorCorrectionEffect") or 
-		   e:IsA("BloomEffect") or e:IsA("DepthOfFieldEffect") or e:IsA("Atmosphere") then
-			e.Enabled = false
-		end
-	end
-	
-	-- Teleport to sky platform
-	wait(0.2)
-	humanoidRootPart.CFrame = CFrame.new(platform.Position + Vector3.new(0, 5, 0))
-	
-	Notify("Ultimate Clean", "Anti-AFK, Hide Inv, Max FPS, Deleted " .. deletedCount .. " objects, Sky TP!", 5)
+	local workspace = game:GetService("Workspace")
+    local Lighting = game:GetService("Lighting")
+    -- Teleport 15,000 studs up
+    local skyHeight = 15000
+    local skyPos = hrp.Position + Vector3.new(0, skyHeight, 0)
+
+    -- Create invisible platform
+    local platform = Instance.new("Part")
+    platform.Name = "DontDeleteMe"
+    platform.Size = Vector3.new(50, 2, 50)
+    platform.Position = skyPos - Vector3.new(0, 3, 0) -- just below player
+    platform.Anchored = true
+    platform.Transparency = 1
+    platform.CanCollide = true
+    platform.Parent = workspace
+
+    -- Move player above platform
+    hrp.CFrame = CFrame.new(skyPos)
+
+    -- Camera & visual optimizations
+    player.CameraMaxZoomDistance = 1500
+    Lighting.FogEnd = 100000
+    Lighting.Atmosphere.Density = 0
+    local atm = Lighting:FindFirstChildOfClass("Atmosphere")
+    if atm then atm:Destroy() end
+
+    -- Destroy HUD
+    local hud = player.PlayerGui:FindFirstChild("HUD")
+    if hud then hud:Destroy() end
+
+    -- Clean workspace except character and whitelist
+    local whitelistNames = { ["Baseplate"] = true, ["DontDeleteMe"] = true }
+    local keepObjects = {}
+    for _, desc in ipairs(character:GetDescendants()) do keepObjects[desc] = true end
+    keepObjects[character] = true
+
+    local function isNameWhitelisted(obj)
+        while obj do 
+            if whitelistNames[obj.Name] then return true end 
+            obj = obj.Parent 
+        end
+        return false
+    end
+
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if not keepObjects[obj] and obj ~= workspace.CurrentCamera and not obj:IsDescendantOf(workspace.CurrentCamera) then
+            if not isNameWhitelisted(obj) and obj.Parent then
+                pcall(function() obj:Destroy() end)
+            end
+        end
+    end
+
+    -- Destroy TourneyQ in ReplicatedFirst
+    local ReplicatedFirst = game:GetService("ReplicatedFirst")
+    if ReplicatedFirst:FindFirstChild("TourneyQ") then 
+        ReplicatedFirst.TourneyQ:Destroy() 
+    end
+	Notify("Ultimate Clean", "Anti-AFK, Hide Inv, Max FPS, Deleted objects, Sky TP!", 5)
 end)
 
 -- Duping Tab
